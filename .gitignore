@@ -17,3 +17,5 @@ playwright/screenshots/target/*
 output/*
 dist/*
 *.json
+
+TODO.md
