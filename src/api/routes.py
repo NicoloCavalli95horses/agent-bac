@@ -14,6 +14,7 @@ data = {
   "mutated_keys": [],
   "web_agent": [],
   "tokens": 0,
+  "attempts": {"exploration": 0, "evaluation": 0},
 }
 
 # ===========
@@ -57,6 +58,18 @@ def create_router(state):
     print(f"[API] Received agent output: {payload}")
     data["web_agent"].append(payload)
     data["tokens"] += count_tokens(payload)
+    return {"status": "ok"}
+
+
+  # Save agent attempts
+  @router.post("/agent-attempts", status_code=200)
+  def save_agent_attempts(payload: dict):
+    print(f"[API] Received agent output: {payload}")
+    run = payload.get("run")
+    attempts = payload.get("attempts")
+    if run == "exploration" or run == "evaluation":
+      data["attempts"][run] = attempts
+    
     return {"status": "ok"}
 
 

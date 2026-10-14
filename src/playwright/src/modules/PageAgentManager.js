@@ -6,7 +6,7 @@ import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { config } from "../config.js";
-import { apiSaveAgentOutput } from "../utils/api.js";
+import { apiSaveAgentOutput, apiSaveAgentAttempts } from "../utils/api.js";
 
 //===================
 // Class
@@ -27,6 +27,7 @@ export class PageAgentManager {
     };
   }
 
+
   async start(promptReady = undefined) {
     log("[PageAgentManager] Started");
     await this.waitForDOMStable();
@@ -36,10 +37,13 @@ export class PageAgentManager {
     }
 
     const prompt = promptReady ?? await this.getPrompt(this.prompts[this.currentRun]);
-    const result = await this.executeWithRetry(prompt);
+    const {result, attempt} = await this.executeWithRetry(prompt);
 
     if (!result?.success) {
       throw new Error(`Page agent failed during ${this.currentRun}`);
+    }
+    if (attempt && !isNaN(parseInt(attempt))) {
+      await apiSaveAgentAttempts(this.currentRun, attempt);
     }
 
     await apiSaveAgentOutput(result);
@@ -61,10 +65,10 @@ export class PageAgentManager {
 
     const basePrompt = await this.getPrompt(this.prompts[this.currentRun]);
     const prompt = `
-      The following data contains the results produced by the previous exploration step.
-      You must use these results as input for the current task.
-      ${exploration.data}
-      # Current Task ${basePrompt}
+      ## Role
+      You are an expert web application tester specializing in web security, access control, and feature-gating mechanisms.
+      The following data contains the results produced by the previous exploration step. You must use these results as input for the current task.
+      ${exploration.data} ${basePrompt}
     `;
 
     log("[ExplorationManager][next] Evaluating previous results...");
@@ -80,6 +84,7 @@ export class PageAgentManager {
   }
 
 
+
   // Returns true if the agent returned "found":true
   hasSucceded(data) {
     const res = this.results.evaluation || data;
@@ -89,6 +94,7 @@ export class PageAgentManager {
 
     return /"found"\s*:\s*true\b/.test(res.data);
   }
+
 
 
   // ==============================
@@ -114,7 +120,7 @@ export class PageAgentManager {
 
       // Task completed with found:true
       if (result?.success && this.hasSucceded(result)) {
-        return result;
+        return {result, attempt};
       } 
 
       log(`[PageAgentManager] Attempt ${attempt}/${config.LLMfailureRetries} failed: ${result?.error ?? "Unknown error"}`);

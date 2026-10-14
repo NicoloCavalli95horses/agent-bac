@@ -27,7 +27,7 @@ export async function apiToggleProxyState(enable) {
 }
 
 
-export async function apiInitRun(initial_url="") {
+export async function apiInitRun(initial_url = "") {
   const url = `${BASE_URL}/init`;
   const options = _getApiOptions({ method: "POST", body: { url: initial_url } });
   log("[API] Requested new run init")
@@ -47,12 +47,20 @@ export async function apiGetResults() {
 
 export async function apiSaveAgentOutput(body) {
   const url = `${BASE_URL}/agent-output`;
-  const options = _getApiOptions({ method: "POST", body});
+  const options = _getApiOptions({ method: "POST", body });
   log("[API] Saved agent output")
 
   return await _executeApi({ url, options });
 }
 
+
+export async function apiSaveAgentAttempts(run, attempts) {
+  const url = `${BASE_URL}/agent-attempts`;
+  const options = _getApiOptions({ method: "POST", body: { run, attempts } });
+  log("[API] Saved agent attempts")
+
+  return await _executeApi({ url, options });
+}
 
 
 async function _executeApi({ url, options }) {

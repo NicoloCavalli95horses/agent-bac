@@ -1,4 +1,4 @@
-// injectHook.js
+// button.js
 // These functions are injected in the visited webpage
 
 // ===========

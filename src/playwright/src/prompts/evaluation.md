@@ -1,7 +1,3 @@
-## Role
-
-You are an expert web application tester specializing in web security, access control, and feature-gating mechanisms.
-
 ## Instructions
 
 You must use the data provided. Based on the input data provided, analyze the current web page to identify features, content, actions, or functionality **that were deemed as premium.**
