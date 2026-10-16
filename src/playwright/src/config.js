@@ -15,5 +15,5 @@ export const config = Object.freeze({
   LLMfailureRetries: 5,
 
   // Generate E2E test based on page agent interactions [experimental]
-  generateE2E: true,
+  generateE2E: false,
 });
