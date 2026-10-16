@@ -2,7 +2,7 @@ export const config = Object.freeze({
 
   // Setup initial page: this may not be exactly the page under test
   // Authentication and CAPTCHA solving have to be done manually
-  initialPage: "https://www.calm.com/app",
+  initialPage: "",
 
   pageAgent: {
     baseURL: process.env.BASE_URL,
@@ -13,4 +13,7 @@ export const config = Object.freeze({
 
   // Retry in case of LLM failure
   LLMfailureRetries: 5,
+
+  // Generate E2E test based on page agent interactions [experimental]
+  generateE2E: true,
 });

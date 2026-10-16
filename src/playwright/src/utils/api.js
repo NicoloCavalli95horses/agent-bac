@@ -36,10 +36,19 @@ export async function apiInitRun(initial_url = "") {
 }
 
 
-export async function apiGetResults() {
-  const url = `${BASE_URL}/results`;
+export async function apiSaveJSONStats() {
+  const url = `${BASE_URL}/json-stats`;
   const options = _getApiOptions();
-  log("[API] Requested new results")
+  log("[API] Requested new JSON stats")
+
+  return await _executeApi({ url, options });
+}
+
+
+export async function apiGetTamperedHTTPevents() {
+  const url = `${BASE_URL}/all-http-events`;
+  const options = _getApiOptions();
+  log("[API] Requested affected HTTP events")
 
   return await _executeApi({ url, options });
 }

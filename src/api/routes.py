@@ -17,6 +17,8 @@ data = {
   "attempts": {"exploration": 0, "evaluation": 0},
 }
 
+http_events = []
+
 # ===========
 # Router
 # ===========
@@ -45,7 +47,7 @@ def create_router(state):
 
 
   # Save local JSON
-  @router.get("/results", status_code=200)
+  @router.get("/json-stats", status_code=200)
   def start_analysis():    
     prepare_data_count()
     save_to_json(data, state.target_url)
@@ -79,6 +81,20 @@ def create_router(state):
     print(f"[API] Saved JSON key: {payload}")
     data["mutated_keys"].append(payload)
     return {"status": "ok"}
+
+
+  # Save affected HTTP events 
+  @router.post("/save-http-events", status_code=200)
+  def save_events(payload: dict):
+    print(f"[API] Received couple of req/res")
+    http_events.append(payload)
+    return {"status": "ok"}
+  
+  
+  # Get all affected HTTP events 
+  @router.get("/all-http-events", status_code=200)
+  def all_http_events():
+    return {"status": "ok", "data": http_events}
       
   return router
 

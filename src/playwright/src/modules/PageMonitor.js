@@ -46,6 +46,8 @@ export class PageMonitor {
     this.stateManager.setPage(page);
     log("[PageMonitor] Attaching monitor to:", page.url());
 
+    await this.configureCSP(page);
+
     if (config.initialPage) {
       await page.goto(config.initialPage);
       log("[PageMonitor] Navigated to initial page:", page.url());
@@ -71,6 +73,39 @@ export class PageMonitor {
       } catch (err) {
         log("[PageMonitor] Navigation handler failed:", err.message);
       }
+    });
+  }
+
+
+
+  async configureCSP(page) {
+    await page.route("**/*", async (route) => {
+      const request = route.request();
+
+      if (!request.isNavigationRequest() || request.frame() !== page.mainFrame()) {
+        return route.continue();
+      }
+      const response = await route.fetch();
+
+      if (!response.ok()) {
+        return route.fulfill({ response });
+      }
+      const headers = { ...response.headers() };
+      const csp = headers["content-security-policy"];
+
+      if (!csp) {
+        return route.fulfill({ response });
+      }
+
+      headers["content-security-policy"] = csp.replace(/script-src([^;]*)/i, (directive, sources) => {
+        if (sources.includes("https://cdn.jsdelivr.net")) {
+          return directive;
+        }
+        return `${directive} https://cdn.jsdelivr.net`;
+      }
+      );
+
+      await route.fulfill({ response, headers });
     });
   }
 }

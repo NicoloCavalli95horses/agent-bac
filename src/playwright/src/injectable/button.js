@@ -41,6 +41,8 @@ async function installButton() {
 
   btn.style.cssText = `
     position: fixed;
+    top: auto;
+    left: auto;
     bottom: 0px;
     right: 0px;
     width: auto;
@@ -72,12 +74,49 @@ function getClickableTarget(el) {
 
 
 
+function getElFingerprint(el) {
+  if (!el) { return null; }
+
+  const attrs = Array.from(el.attributes)
+    .filter(attr => attr.name.startsWith("data-") || attr.name === "role" || attr.name === "name")
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(attr => ({ name: attr.name, value: attr.value }));
+
+  const rect = el.rect || el.getBoundingClientRect();
+
+  return {
+    tag: el.tagName.toLowerCase(),
+    id: el.id || null,
+    classes: Array.from(el.classList),
+    attributes: attrs,
+    rect: {
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height
+    }
+  };
+}
+
+
+
 function installClickListener() {
   document.addEventListener("click", e => {
     const canEmitClick = !e.target.closest("#__playwright_debug") && typeof window._dispatchEvent === "function";
     if (canEmitClick) {
       const target = e.target instanceof Element ? getClickableTarget(e.target) : null;
       if (!target) { return; }
+
+      const position = {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        pageX: e.pageX,
+        pageY: e.pageY,
+        screenX: e.screenX,
+        screenY: e.screenY,
+      }
+
+      window._dispatchEvent({ type: "CLICK", target: getElFingerprint(target), position });
     }
   }, true);
 }

@@ -32,5 +32,7 @@ function onDOMReady(fn) {
   // Install command button
   onDOMReady(() => {
     injectButton();
-  })
+  });
+
+  console.log('[INJECTABLE] Successfully injected scripts.')
 })();

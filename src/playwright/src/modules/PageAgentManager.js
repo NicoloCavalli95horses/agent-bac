@@ -25,6 +25,8 @@ export class PageAgentManager {
       exploration: undefined,
       evaluation: undefined,
     };
+
+    this.success = null;
   }
 
 
@@ -78,9 +80,13 @@ export class PageAgentManager {
 
 
   async end() {
+    let flag = this.success;
+
     if (this.initialURL) {
       await this.goToInitialState(this.initialURL);
     }
+    this.success = false;
+    return flag;
   }
 
 
@@ -120,6 +126,7 @@ export class PageAgentManager {
 
       // Task completed with found:true
       if (result?.success && this.hasSucceded(result)) {
+        this.success = true;
         return {result, attempt};
       } 
 

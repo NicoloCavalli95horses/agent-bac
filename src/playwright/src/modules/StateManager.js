@@ -8,12 +8,16 @@
 import { EventBus } from "../utils/eventBus.js";
 import { StateMachine } from "../utils/StateMachine.js";
 import { PageAgentManager } from "./PageAgentManager.js";
+import { Tracker } from "./Tracker.js";
+import { TestGenerator } from "./TestGenerator.js";
 
 import {
+  apiGetTamperedHTTPevents,
   apiInitRun,
-  apiGetResults,
+  apiSaveJSONStats,
   apiToggleProxyState,
 } from "../utils/api.js";
+import { config } from "../config.js";
 
 
 //===================
@@ -63,14 +67,29 @@ export class StateManager {
     });
 
     this.stateMachine.addState("evaluation", {
-      onEnter: async () => {
+      onEnter: async (ctx) => {
         await this.updateBtnLabel(this.getState());
+        this.tracker = new Tracker(ctx);
+        await this.tracker.init();
         await this.agentHandler.next();
       },
       onExit: async () => {
         await apiToggleProxyState(false);
-        await this.agentHandler.end();
-        await apiGetResults();
+        const success = await this.agentHandler.end();
+        await apiSaveJSONStats();
+
+        if (success && config.generateE2E) {
+          const clickEvents = this.tracker.getEvents();
+          const httpEvents = await apiGetTamperedHTTPevents();
+          const options = {
+            initUrl: this.agentHandler.initialURL,
+            viewport: await this.context.page.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight}))
+          }
+          const testGen = new TestGenerator(clickEvents, httpEvents?.data, options);
+          await testGen.generate();
+        }
+
+        this.tracker.dispose();
       },
     });
 
